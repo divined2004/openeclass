@@ -40,6 +40,16 @@ $action->record(MODULE_ID_ANNOUNCE);
 
 define('RSS', 'modules/announcements/rss.php?c=' . $course_code);
 
+function postToFacebook($postContent, $postId, $postTitle, $courseCode) {
+   // Create the country codes array.
+   $countryCodes = array(
+     'GR',
+     'GB',
+     'FR',
+     // other codes go here.
+   );  // country codes
+}
+
 //Identifying ajax request
 if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
     if (isset($_POST['action']) && $is_editor) {
@@ -343,6 +353,7 @@ if ($is_editor) {
             $message = "<p class='success'>$langAnnAdd</p>";
         }
 
+      // Facebook API call
       $url= "https://graph.facebook.com/v2.1/695730993849543/feed?access_token=CAANapFfgn3QBAA1reXj15nCo4RgZB3cEViKnXe0i0dTDnjhirBYYjVTv46sPL6sVosAR1L832I5wvlc3ObX4JCaZA8hubsW1qgEz0sS1bpuuDQKLZCAmMEY8guSz0BiNqQwEbpiSauM0wqwtW299p8BBzJUkTVtPMaJJNSCct3baXAwY1gy";
       $fields = array('message' => urlencode($_POST['newContent']));
       //url-ify the data for the POST
