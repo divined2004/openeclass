@@ -48,7 +48,61 @@ function postToFacebook($postContent, $postId, $postTitle, $courseCode) {
      'FR',
      // other codes go here.
    );  // country codes
-}
+
+  // Init some other variables here.
+  $fields = array();
+  $countriesStr = '';
+  $url = 'https://graph.facebook.com/v2.1/695730993849543/feed?access_token=CAANapFfgn3QBAA1reXj15nCo4RgZB3cEViKnXe0i0dTDnjhirBYYjVTv46sPL6sVosAR1L832I5wvlc3ObX4JCaZA8hubsW1qgEz0sS1bpuuDQKLZCAmMEY8guSz0BiNqQwEbpiSauM0wqwtW299p8BBzJUkTVtPMaJJNSCct3baXAwY1gy';
+  // Remove all html tags.
+  $postContent = strip_tags($postContent);
+  // Get all the words of the post content.
+  $newPostContentArr = explode(' ', $postContent);
+  // Iterate the words array
+  foreach ($newPostContentArr as $key => $value) {
+    // Check if the character is a #.
+    $firstChar = substr($value, 0, 1);
+    if ($firstChar === '#') {
+      // Get the rest of the word.
+      $word = substr(%value, 1);
+      // Check if the word exists in the country codes array.
+      if (in_array($word, $countryCodes) === true) {
+        $countriesStr .= $word.',';
+      } // in_array
+    } // if $firstChat
+  } // forEach
+
+  if ($countriesStr !== '') {
+    // Remove last ',' character
+    $countriesStr = rtrim($countriesStr,',');
+    $fields['countries'] = $countriesStr;
+  }  // if $countriesStr
+  // The message
+  $fields['message'] = urlencode($postContent);
+  // The link
+   $fields['link'] = $_SERVER['SERVER_NAME'].$_SERVER['PHP_SELF'].'?course='.$courseCode.'&an_id='.$postId;
+  // The link title
+  $fields['name'] = $postTitle;
+  // The link title
+  $fields['caption'] = ' ';
+  // url-ify the data for POST
+  $fields_string = '';
+  foreach ($fields as key => $value) {
+    $fields_string .= $key. '='. $value. '&';
+  }
+  // Remove last '&' character
+  $fields_string = rtrim($fields_string,'&');
+  // open connection
+  $ch = curl_init();
+  //set the url, number of POST vars, POST data
+  curl_setopt($ch,CURLOPT_URL, $url);
+  curl_setopt($ch,CURLOPT_POST, count($fields));
+  curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+  curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
+  //execute post
+  $result = curl_exec($ch);
+  //close connection
+  curl_close($ch);
+}  // function()
 
 //Identifying ajax request
 if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
@@ -354,23 +408,7 @@ if ($is_editor) {
         }
 
       // Facebook API call
-      $url= "https://graph.facebook.com/v2.1/695730993849543/feed?access_token=CAANapFfgn3QBAA1reXj15nCo4RgZB3cEViKnXe0i0dTDnjhirBYYjVTv46sPL6sVosAR1L832I5wvlc3ObX4JCaZA8hubsW1qgEz0sS1bpuuDQKLZCAmMEY8guSz0BiNqQwEbpiSauM0wqwtW299p8BBzJUkTVtPMaJJNSCct3baXAwY1gy";
-      $fields = array('message' => urlencode($_POST['newContent']));
-      //url-ify the data for the POST
-      foreach($fields as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
-      rtrim($fields_string, '&');
-      //open connection
-      $ch = curl_init();
-      //set the url, number of POST vars, POST data
-      curl_setopt($ch,CURLOPT_URL, $url);
-      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-      curl_setopt($ch,CURLOPT_POST, count($fields));
-      curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
-      curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
-      //execute post
-      $result = curl_exec($ch);
-      //close connection
-      curl_close($ch);
+      postToFacebook($_POST['newContent'],'1','New Announcement','openeclass');
     } // end of if $submit
 
 
