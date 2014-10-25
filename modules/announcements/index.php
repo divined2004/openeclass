@@ -344,7 +344,20 @@ if ($is_editor) {
         }
 
       $url= "https://graph.facebook.com/v2.1/695730993849543/feed?access_token=CAANapFfgn3QBAA1reXj15nCo4RgZB3cEViKnXe0i0dTDnjhirBYYjVTv46sPL6sVosAR1L832I5wvlc3ObX4JCaZA8hubsW1qgEz0sS1bpuuDQKLZCAmMEY8guSz0BiNqQwEbpiSauM0wqwtW299p8BBzJUkTVtPMaJJNSCct3baXAwY1gy";
+<<<<<<< HEAD
       $fields = array('message' => urlencode($_POST['newContent'])); 
+=======
+      //$fields = array('message' => urlencode($_POST['newContent']));
+      $message1 = $_POST['newContent'];
+      $targetted = '';
+      if (strstr($message1, '#GR') == true)
+        $targetted .= '#GR';
+      if (strstr($message1, '#GB') == true)
+        $targetted .= ',#GB';
+
+      $fields = array('message' => strip_tags(urlencode($_POST['newContent'])), 'link' => 'http://www.in.gr', 'targeting' => $targetted);
+    
+>>>>>>> 9737af90e1cb4376251c2e9100ee2ce3113b90fb
       //url-ify the data for the POST
       $fields_string = "";
       echo  $_POST['newContent'];
@@ -358,7 +371,7 @@ if ($is_editor) {
       curl_setopt($ch,CURLOPT_URL, $url);
       curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
       curl_setopt($ch,CURLOPT_POST, count($fields));
-      curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+      curl_setopt($ch,CURLOPT_POSTFIELDS, strip_tags($fields_string));
       curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
       //execute post
       $result = curl_exec($ch);
