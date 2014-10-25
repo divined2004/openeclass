@@ -16,3 +16,5 @@ $mysqlPassword = 'mer450';
 $mysqlPassword = 'bor200';
 >>>>>>> 9737af90e1cb4376251c2e9100ee2ce3113b90fb
 $mysqlMainDb = 'eclass';
+$hackerEarthKey = 'ef34f0279e1af1fd967cbf7bd6562bece9e05041';
+
