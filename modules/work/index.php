@@ -530,7 +530,9 @@ function submit_work($id, $on_behalf_of = null) {
           $content = file_get_contents("$workPath/$filename");
           //set POST variables
           $url = 'http://api.hackerearth.com/code/run/';
-          $fields = array('client_secret' => $hackerEarthKey, 'source' => $content, 'lang' => 'PYTHON');
+          $supported_langs = 'PYTHON, C, CPP';
+          $fields_string = '';
+          $fields = array('client_secret' => $hackerEarthKey, 'source' => $content, 'lang' => $supported_langs);
           //url-ify the data for the POST
           foreach($fields as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
           rtrim($fields_string, '&');
