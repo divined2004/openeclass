@@ -1,0 +1,1 @@
+print 'Hello World. Powered by Python!';

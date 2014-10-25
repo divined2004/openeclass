@@ -604,6 +604,19 @@ function new_assignment() {
           <td><input type='checkbox' id='auto_judge' name='auto_judge' value='1' checked='1' /></td>
         </tr>
         <tr>
+          <th>Supported Languages:</th>
+          <td><table>
+             <tr>
+               <th>Python</th>
+               <td><input type='checkbox' id='python_lang' name='python_lang' value='python' checked='1' /></td>
+               <th>C</th>
+               <td><input type='checkbox' id='c_lang' name='c_lang' value='c' checked='1' /></td>
+               <th>C++</th>
+               <td><input type='checkbox' id='c++_lang' name='c++_lang' value='c++' checked='1' /></td>
+             </tr>
+          </table></td>
+        </tr>
+        <tr>
           <th>$m[group_or_user]:</th>
           <td><input type='radio' id='user_button' name='group_submissions' value='0' checked='1' /><label for='user_button'>$m[user_work]</label>
           <br /><input type='radio' id='group_button' name='group_submissions' value='1' /><label for='group_button'>$m[group_work]</label></td>
