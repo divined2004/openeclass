@@ -327,14 +327,17 @@ function add_assignment() {
     $assign_to_specific = filter_input(INPUT_POST, 'assign_to_specific', FILTER_VALIDATE_INT);
     $assigned_to = filter_input(INPUT_POST, 'ingroup', FILTER_VALIDATE_INT, FILTER_REQUIRE_ARRAY);
     $auto_judge = filter_input(INPUT_POST, 'auto_judge', FILTER_VALIDATE_INT);
+    $python_lang = filter_input(INPUT_POST, 'python_lang', FILTER_VALIDATE_INT);
+    $c_lang = filter_input(INPUT_POST, 'c_lang', FILTER_VALIDATE_INT);
+    $c1_lang = filter_input(INPUT_POST, 'c1_lang', FILTER_VALIDATE_INT);
     $secret = uniqid('');
 
     if ($assign_to_specific == 1 && empty($assigned_to)) {
         $assign_to_specific = 0;
     }
     if (@mkdir("$workPath/$secret", 0777) && @mkdir("$workPath/admin_files/$secret", 0777, true)) {       
-        $id = Database::get()->query("INSERT INTO assignment (course_id, title, description, deadline, late_submission, comments, submission_date, secret_directory, group_submissions, max_grade, assign_to_specific, auto_judge) "
-                . "VALUES (?d, ?s, ?s, ?t, ?d, ?s, ?t, ?s, ?d, ?d, ?d, ?d)", $course_id, $title, $desc, $deadline, $late_submission, '', date("Y-m-d H:i:s"), $secret, $group_submissions, $max_grade, $assign_to_specific, $auto_judge)->lastInsertID;
+        $id = Database::get()->query("INSERT INTO assignment (course_id, title, description, deadline, late_submission, comments, submission_date, secret_directory, group_submissions, max_grade, assign_to_specific, auto_judge, python_lang, c_lang, c1_lang) "
+                . "VALUES (?d, ?s, ?s, ?t, ?d, ?s, ?t, ?s, ?d, ?d, ?d, ?d, ?d, ?d, ?d)", $course_id, $title, $desc, $deadline, $late_submission, '', date("Y-m-d H:i:s"), $secret, $group_submissions, $max_grade, $assign_to_specific, $auto_judge, $python_lang, $c_lang, $c1_lang)->lastInsertID;
         $secret = work_secret($id);
         if ($id) {
             $local_name = uid_to_name($uid);
@@ -422,10 +425,13 @@ function submit_work($id, $on_behalf_of = null) {
         }
     } //checks for submission validity end here
     
-    $row = Database::get()->querySingle("SELECT title, group_submissions, auto_judge FROM assignment WHERE course_id = ?d AND id = ?d", $course_id, $id);
+    $row = Database::get()->querySingle("SELECT title, group_submissions, auto_judge, python_lang, c_lang, c1_lang FROM assignment WHERE course_id = ?d AND id = ?d", $course_id, $id);
     $title = q($row->title);
     $group_sub = $row->group_submissions;
     $auto_judge = $row->auto_judge;
+    $python_lang = $row->python_lang;
+    $c_lang = $row->c_lang;
+    $c1_lang = $row->c1_lang;
     $nav[] = $works_url;
     $nav[] = array('url' => "$_SERVER[SCRIPT_NAME]?id=$id", 'name' => $title);
 
@@ -612,7 +618,7 @@ function new_assignment() {
                <th>C</th>
                <td><input type='checkbox' id='c_lang' name='c_lang' value='c' checked='1' /></td>
                <th>C++</th>
-               <td><input type='checkbox' id='c++_lang' name='c++_lang' value='c++' checked='1' /></td>
+               <td><input type='checkbox' id='c1_lang' name='c1_lang' value='c++' checked='1' /></td>
              </tr>
           </table></td>
         </tr>
@@ -646,7 +652,6 @@ function new_assignment() {
                 </td>
                 <td class='right'>
                   <select id='assignee_box' name='ingroup[]' size='15' style='width:180px' multiple>
-
                   </select>
                 </td>
               </tr>
