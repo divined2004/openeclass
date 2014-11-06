@@ -105,6 +105,7 @@ if ($is_editor) {
         $('input[name=group_submissions]').click(changeAssignLabel);
         $('input[id=assign_button_some]').click(ajaxAssignees);        
         $('input[id=assign_button_all]').click(hideAssignees);
+        $('input[name=auto_judge]').click(changeAutojudgeScenarioVisibility);
         function hideAssignees()
         {
             $('#assignees_tbl').hide();
@@ -148,6 +149,13 @@ if ($is_editor) {
                 $('#assignee_box').find('option').remove();
                 $('#assign_box').find('option').remove().end().append(select_content);
             });
+        }
+        function changeAutojudgeScenarioVisibility() {
+         if ($(this).is(':checked')) {
+           $(this).parent().find('table').show();
+         } else {
+           $(this).parent().find('table').hide();
+         }
         }
     });
     
@@ -607,7 +615,29 @@ function new_assignment() {
          </tr>          
         <tr>
           <th>Auto-judge:</th>
-          <td><input type='checkbox' id='auto_judge' name='auto_judge' value='1' checked='1' /></td>
+          <td><input type='checkbox' id='auto_judge' name='auto_judge' value='1' checked='1' />
+          <table>
+            <thead>
+             <tr>
+               <th>Input</th>
+               <th>Expected</th>
+               <th>Delete</th>
+             </tr>
+            </thead>
+            <tbody>
+             <tr>
+               <td><input type='text' name='auto_judge_scenarios[0][input]'/></td>
+               <td><input type='text' name='auto_judge_scenarios[0][output]'/></td>
+               <td><a href='#' class='auto_remove_scenario'>X</a></td>
+             </tr>
+             <tr>
+               <td></td>
+               <td></td>
+               <td><input type='submit' value='Νέο σενάριο' id='autojudge_new_scenario' /></td>
+             </tr>
+            </tbody>
+          </table>
+          </td>
         </tr>
         <tr>
           <th>Supported Languages:</th>
