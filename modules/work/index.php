@@ -106,6 +106,7 @@ if ($is_editor) {
         $('input[id=assign_button_some]').click(ajaxAssignees);        
         $('input[id=assign_button_all]').click(hideAssignees);
         $('input[name=auto_judge]').click(changeAutojudgeScenarioVisibility);
+
         function hideAssignees()
         {
             $('#assignees_tbl').hide();
