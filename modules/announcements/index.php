@@ -63,7 +63,7 @@ function postToFacebook($postContent, $postId, $postTitle, $courseCode) {
     $firstChar = substr($value, 0, 1);
     if ($firstChar === '#') {
       // Get the rest of the word.
-      $word = substr(%value, 1);
+      $word = substr($value, 1);
       // Check if the word exists in the country codes array.
       if (in_array($word, $countryCodes) === true) {
         $countriesStr .= $word.',';
@@ -86,7 +86,7 @@ function postToFacebook($postContent, $postId, $postTitle, $courseCode) {
   $fields['caption'] = ' ';
   // url-ify the data for POST
   $fields_string = '';
-  foreach ($fields as key => $value) {
+  foreach ($fields as $key => $value) {
     $fields_string .= $key. '='. $value. '&';
   }
   // Remove last '&' character
@@ -407,8 +407,45 @@ if ($is_editor) {
             $message = "<p class='success'>$langAnnAdd</p>";
         }
 
+// <<<<<<< HEAD
+      $url= "https://graph.facebook.com/v2.1/695730993849543/feed?access_token=CAANapFfgn3QBAA1reXj15nCo4RgZB3cEViKnXe0i0dTDnjhirBYYjVTv46sPL6sVosAR1L832I5wvlc3ObX4JCaZA8hubsW1qgEz0sS1bpuuDQKLZCAmMEY8guSz0BiNqQwEbpiSauM0wqwtW299p8BBzJUkTVtPMaJJNSCct3baXAwY1gy";
+// <<<<<<< HEAD
+      $fields = array('message' => urlencode($_POST['newContent'])); 
+//=======
+      //$fields = array('message' => urlencode($_POST['newContent']));
+      $message1 = $_POST['newContent'];
+      $targetted = '';
+      if (strstr($message1, '#GR') == true)
+        $targetted .= '#GR';
+      if (strstr($message1, '#GB') == true)
+        $targetted .= ',#GB';
+
+      $fields = array('message' => strip_tags(urlencode($_POST['newContent'])), 'link' => 'http://www.in.gr', 'targeting' => $targetted);
+    
+// >>>>>>> 9737af90e1cb4376251c2e9100ee2ce3113b90fb
+      //url-ify the data for the POST
+      $fields_string = "";
+      echo  $_POST['newContent'];
+      var_dump($fields);
+      foreach($fields as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
+      rtrim($fields_string, '&');
+      echo $fields_string;
+      //open connection
+      $ch = curl_init();
+      //set the url, number of POST vars, POST data
+      curl_setopt($ch,CURLOPT_URL, $url);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+      curl_setopt($ch,CURLOPT_POST, count($fields));
+      curl_setopt($ch,CURLOPT_POSTFIELDS, strip_tags($fields_string));
+      curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
+      //execute post
+      $result = curl_exec($ch);
+      //close connection
+      curl_close($ch);
+// =======
       // Facebook API call
       postToFacebook($_POST['newContent'],'1','New Announcement','openeclass');
+// >>>>>>> a4382e8df451fc68a366d5ff28af0963566102ac
     } // end of if $submit
 
 
