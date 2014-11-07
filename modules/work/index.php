@@ -158,6 +158,29 @@ if ($is_editor) {
            $(this).parent().find('table').hide();
          }
         }
+
+        // Add row
+        $('#autojudge_new_scenario').click(function(e) {
+          var rows = $(this).parent().parent().parent().find('tr').size()-1;
+          // Clone the first line
+          var newLine = $(this).parent().parent().parent().find('tr:first').clone();
+          // Replace 0 with the line number
+          newLine.html(newLine.html().replace(\auto_judge_scenarios\[0\]\g'auto_judge_scenarios['+rows+']'));
+          // Initialize the remove event and show the button
+          newLine.find('autojudge_remove_scenario').show();
+          newLine.find('autojudge_remove_scenario').click(removeRow);
+          // Insert it just before the final line
+          newLine.insertBefore($(this).parent().parent().parent().find('tr:last'));
+          e.preventDefault();
+          return false;
+        });
+        // Remove row
+        function removeRow(e) {
+          $(this).parent().parent().remove();
+          e.preventDefault();
+          return false;
+        }
+        $('autojudge_remove_scenario').click(removeRow);
     });
     
     </script>";    
