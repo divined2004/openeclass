@@ -115,7 +115,7 @@ if ($is_editor) {
         function changeAssignLabel()
         {
             var assign_to_specific = $('input:radio[name=assign_to_specific]:checked').val();
-            if(assign_to_specific==1){
+            if (assign_to_specific==1){
                ajaxAssignees();
             }         
             if (this.id=='group_button') {
@@ -159,28 +159,31 @@ if ($is_editor) {
          }
         }
 
-        // Add row
-        $('#autojudge_new_scenario').click(function(e) {
-          var rows = $(this).parent().parent().parent().find('tr').size()-1;
-          // Clone the first line
-          var newLine = $(this).parent().parent().parent().find('tr:first').clone();
-          // Replace 0 with the line number
-          newLine.html(newLine.html().replace(\auto_judge_scenarios\[0\]\g'auto_judge_scenarios['+rows+']'));
-          // Initialize the remove event and show the button
-          newLine.find('autojudge_remove_scenario').show();
-          newLine.find('autojudge_remove_scenario').click(removeRow);
-          // Insert it just before the final line
-          newLine.insertBefore($(this).parent().parent().parent().find('tr:last'));
-          e.preventDefault();
-          return false;
-        });
-        // Remove row
+       // Add row
+       $('#autojudge_new_scenario').click(function(e) {
+         var rows = $(this).parent().parent().parent().find('tr').size()-1;
+         // Clone the first line
+         var newLine = $(this).parent().parent().parent().find('tr:first').clone();
+         // Replace 0 with the line number
+        newLine.html(newLine.html().replace(/auto_judge_scenarios\[0\]/g, 'auto_judge_scenarios['+rows+']'));
+        // Initialize the remove event and show the button
+        newLine.find('autojudge_remove_scenario').show();
+        newLine.find('autojudge_remove_scenario').click(removeRow);
+        // Insert it just before the final line
+        newLine.insertBefore($(this).parent().parent().parent().find('tr:last'));
+        e.preventDefault();
+        return false;
+       });
+
+       // Remove row
         function removeRow(e) {
           $(this).parent().parent().remove();
           e.preventDefault();
           return false;
         }
-        $('autojudge_remove_scenario').click(removeRow);
+
+       $('autojudge_remove_scenario').click(removeRow);
+
     });
     
     </script>";    
@@ -652,7 +655,7 @@ function new_assignment() {
              <tr>
                <td><input type='text' name='auto_judge_scenarios[0][input]'/></td>
                <td><input type='text' name='auto_judge_scenarios[0][output]'/></td>
-               <td><a href='#' class='auto_remove_scenario'>X</a></td>
+               <td><a href='#' class='autojudge_remove_scenario'>X</a></td>
              </tr>
              <tr>
                <td></td>
