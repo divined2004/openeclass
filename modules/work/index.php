@@ -567,31 +567,40 @@ function submit_work($id, $on_behalf_of = null) {
         } else {
             $tool_content .= "<p class='caution'>$langUploadError<br /><a href='$_SERVER[SCRIPT_NAME]?course=$course_code'>$langBack</a></p><br />";
         }
+        // Auto-judge : Send file to hackerearth and calculate grade
+        
         if ($auto_judge) {
           // Auto-judge: Send file to hackearth
           global $hackerEarthKey;
           $content = file_get_contents("$workPath/$filename");
-          //set POST variables
-          $url = 'http://api.hackerearth.com/code/run/';
-          $supported_langs = 'PYTHON, C, CPP';
-          $fields_string = '';
-          $fields = array('client_secret' => $hackerEarthKey, 'source' => $content, 'lang' => $supported_langs);
-          //url-ify the data for the POST
-          foreach($fields as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
-          rtrim($fields_string, '&');
-          //open connection
-          $ch = curl_init();
-          //set the url, number of POST vars, POST data
-          curl_setopt($ch,CURLOPT_URL, $url);
-          curl_setopt($ch,CURLOPT_POST, count($fields));
-          curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
-          curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
-          //execute post
-          $result = curl_exec($ch);
-          $result = json_decode($result, true);
-          $result['run_status']['output'] = trim($result['run_status']['output']);
+          // Run each scenario and count how many have passed
+          $passed = 0;
+          foreach ($auto_judge_scenarios as $curScenario) {
+            //set POST variables
+            $url = 'http://api.hackerearth.com/code/run/';
+            $supported_langs = 'PYTHON, C, CPP';
+            $fields_string = '';
+            $fields = array('client_secret' => $hackerEarthKey, 'source' => $content, 'lang' => $supported_langs, 'input' => $curScenario['input']);
+            //url-ify the data for the POST
+            foreach($fields as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
+            rtrim($fields_string, '&');
+            //open connection
+            $ch = curl_init();
+            //set the url, number of POST vars, POST data
+            curl_setopt($ch,CURLOPT_URL, $url);
+            curl_setopt($ch,CURLOPT_POST, count($fields));
+            curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+            curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
+            //execute post
+            $result = curl_exec($ch);
+            $result = json_decode($result, true);
+            if ($result['run_status']['output'] == $curScenario['output'] ) { $passed++; }
+          }
+          
           // Add the output as a comment
-          submit_grade_comments($id, $sid, 10, 'Output: '.$result['run_status']['output'], false);
+          $grade = round($passed/count($auto_judge_scenarios)*10);
+          //submit_grade_comments($id, $sid, $grade, 'Output: '.$result['run_status']['output'], false);
+          submit_grade_comments($id, $sid, $grade, 'Tests passed: ' . $passed . '/' . count($auto_judge_scenarios), false);
           // End Auto-judge 
           }
     } else { // not submit_ok
