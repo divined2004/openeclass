@@ -594,7 +594,9 @@ function submit_work($id, $on_behalf_of = null) {
             //execute post
             $result = curl_exec($ch);
             $result = json_decode($result, true);
-            if ($result['run_status']['output'] == $curScenario['output'] ) { $passed++; }
+            //if ( $result['run_status']['output'] == $curScenario['output'] ) { $passed++; }
+            $result['run_status']['output'] = trim($result['run_status']['output']);
+            if ( $result['run_status']['output'] == $curScenario['output'] ) { $passed++; }
           }
           
           // Add the output as a comment
