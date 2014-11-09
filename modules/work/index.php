@@ -844,6 +844,48 @@ function show_edit_assignment($id) {
           <th></th>
           <td><input type='checkbox' name='late_submission' value='1' ".(($row->late_submission)? 'checked' : '').">$m[late_submission_enable]</td>
     </tr>     
+
+     <tr>
+          <th>Auto-judge:</th>
+          <td><input type='checkbox' id='auto_judge' name='auto_judge' value='1' checked='1' />
+          <table>
+            <thead>
+             <tr>
+               <th>Input</th>
+               <th>Expected</th>
+               <th>Delete</th>
+             </tr>
+            </thead>
+            <tbody>
+             <tr>
+               <td><input type='text' name='auto_judge_scenarios[0][input]'/></td>
+               <td><input type='text' name='auto_judge_scenarios[0][output]'/></td>
+               <td><a href='#' class='autojudge_remove_scenario'>X</a></td>
+             </tr>
+             <tr>
+               <td></td>
+               <td></td>
+               <td><input type='submit' value='Νέο σενάριο' id='autojudge_new_scenario' /></td>
+             </tr>
+            </tbody>
+          </table>
+          </td>
+        </tr>
+        <tr>
+          <th>Supported Languages:</th>
+          <td><table>
+             <tr>
+               <th>Python</th>
+               <td><input type='checkbox' id='python_lang' name='python_lang' value='python' checked='1' /></td>
+               <th>C</th>
+               <td><input type='checkbox' id='c_lang' name='c_lang' value='c' checked='1' /></td>
+               <th>C++</th>
+               <td><input type='checkbox' id='c1_lang' name='c1_lang' value='c++' checked='1' /></td>
+             </tr>
+          </table></td>
+        </tr>
+
+
     <tr>
       <th valign='top'>$m[group_or_user]:</th>
       <td><input type='radio' id='user_button' name='group_submissions' value='0'".(($row->group_submissions==1) ? '' : 'checked')." />
