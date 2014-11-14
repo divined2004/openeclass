@@ -54,6 +54,26 @@ $workPath = $webDir . "/courses/" . $course_code . "/work";
 $works_url = array('url' => "$_SERVER[SCRIPT_NAME]?course=$course_code", 'name' => $langWorks);
 $nameTools = $langWorks;
 
+/* map languages to their source file extensions
+ * these are the available languages supported from hackerearth
+ */
+$language_extensions = array(
+    "c" => "C",
+    "cpp" => "CPP",
+    "cpp11" => "CPP11", /* there is no such extension, it is a .cpp file as
+                         * well, but it is assumed like this for simplicity
+                         */
+    "clj" => "CLOJURE",
+    "cs" => "CSHARP",
+    "java" => "JAVA",
+    "js" => "JAVASCRIPT",
+    "hs" => "HASKELL",
+    "pl" => "PERL",
+    "php" => "PHP",
+    "py" => "PYTHON",
+    "rb" => "RUBY"
+);
+
 //-------------------------------------------
 // main program
 //-------------------------------------------
@@ -90,6 +110,25 @@ if ($is_editor) {
     global $themeimg, $m;
     $head_content .= "
     <script type='text/javascript'>
+
+    function check_languages(){
+        /* function to check if the admin chooses at least one language */
+        var langs = document.getElementsByClassName('langs');
+        var found = false;
+        for(i = 0; i < langs.length; i++){
+            if(langs[i].checked){
+                found = true;
+                break;
+            }
+        }
+        if(found)
+            return true;
+        else {
+            alert('You must choose at least one language!');
+            return false;
+        }
+    }
+
     $(function() {        
         $('input[name=group_submissions]').click(changeAssignLabel);
         $('input[id=assign_button_some]').click(ajaxAssignees);        
@@ -153,7 +192,10 @@ if ($is_editor) {
             // Clone the first line
             var newLine = $(this).parent().parent().parent().find('tr:first').clone();
             // Replace 0 wth the line number
-            newLine.html(newLine.html().replace(/auto_judge_scenarios\[0\]/g, 'auto_judge_scenarios['+rows+']'));
+            newLine.html(newLine.html().replace(/auto_judge_scenarios\[0\]/g,
+                'auto_judge_scenarios['+rows+']'));
+            // remove values in case we are in edit-assignment page
+            // newLine.html(newLine.html().replace(/value=\".*?\"/g, ' '));
             // Initialize the remove event and show the button
             newLine.find('.autojudge_remove_scenario').show();
             newLine.find('.autojudge_remove_scenario').click(removeRow);
@@ -167,10 +209,11 @@ if ($is_editor) {
             $(this).parent().parent().remove();
             e.preventDefault();
             return false;
+
         }
         $('.autojudge_remove_scenario').click(removeRow);
     });
-    
+
     </script>";    
 
     $email_notify = (isset($_POST['email']) && $_POST['email']);
@@ -320,6 +363,9 @@ draw($tool_content, 2, null, $head_content);
 function add_assignment() {
     global $tool_content, $workPath, $course_id, $uid, $langTheField, $m, 
     $course_code, $langFormErrors;
+
+    global $language_extensions;
+
     $v = new Valitron\Validator($_POST);
     $v->rule('required', ['title', 'max_grade']);
     $v->rule('numeric', ['max_grade']);
@@ -338,15 +384,28 @@ function add_assignment() {
         $assigned_to = filter_input(INPUT_POST, 'ingroup', FILTER_VALIDATE_INT, FILTER_REQUIRE_ARRAY);
         $auto_judge = filter_input(INPUT_POST, 'auto_judge', FILTER_VALIDATE_INT);
         $auto_judge_scenarios = serialize($_POST['auto_judge_scenarios']);
-        $lang = filter_input(INPUT_POST, 'lang');
+
+        /* get the languages the course admin chose for the assignment
+         * assume POST data are sent as $_POST['py'], ..., for each language
+         */
+        $chosen_langs = "";
+        foreach($language_extensions as $ext => $lang){
+        if(isset($_POST[$ext]) && ($_POST[$ext] === $lang)){
+            /* build a string with a space between chosen languages
+             * that way we can save a single string in the database */  
+            $chosen_langs .= $ext . " ";
+        }
+    }
+    $chosen_langs = rtrim($chosen_langs, " "); // remove last white space
+
         $secret = uniqid('');
 
         if ($assign_to_specific == 1 && empty($assigned_to)) {
             $assign_to_specific = 0;
         }
         if (@mkdir("$workPath/$secret", 0777) && @mkdir("$workPath/admin_files/$secret", 0777, true)) {       
-            $id = Database::get()->query("INSERT INTO assignment (course_id, title, description, deadline, late_submission, comments, submission_date, secret_directory, group_submissions, max_grade, assign_to_specific, auto_judge, auto_judge_scenarios, lang) "
-                    . "VALUES (?d, ?s, ?s, ?t, ?d, ?s, ?t, ?s, ?d, ?d, ?d)", $course_id, $title, $desc, $deadline, $late_submission, '', date("Y-m-d H:i:s"), $secret, $group_submissions, $max_grade, $assign_to_specific, $auto_judge, $auto_judge_scenarios, $lang)->lastInsertID;
+            $id = Database::get()->query("INSERT INTO assignment (course_id, title, description, deadline, late_submission, comments, submission_date, secret_directory, group_submissions, max_grade, assign_to_specific, auto_judge, auto_judge_scenarios, languages) "
+                    . "VALUES (?d, ?s, ?s, ?t, ?d, ?s, ?t, ?s, ?d, ?d, ?d, ?d, ?s, ?s)", $course_id, $title, $desc, $deadline, $late_submission, '', date("Y-m-d H:i:s"), $secret, $group_submissions, $max_grade, $assign_to_specific, $auto_judge, $auto_judge_scenarios, $chosen_langs)->lastInsertID;
             $secret = work_secret($id);
             if ($id) {
                 $local_name = uid_to_name($uid);
@@ -436,13 +495,17 @@ function submit_work($id, $on_behalf_of = null) {
             }
         }
     } //checks for submission validity end here
-    
-    $row = Database::get()->querySingle("SELECT title, group_submissions, auto_judge, auto_judge_scenarios, lang FROM assignment WHERE course_id = ?d AND id = ?d", $course_id, $id);
-    $title = q($row->title);
+
+    $row = Database::get()->querySingle("SELECT title, group_submissions, " .
+        "auto_judge, languages, auto_judge_scenarios FROM assignment WHERE course_id = ?d AND " .
+        "id = ?d", $course_id, $id); $title = q($row->title);
     $group_sub = $row->group_submissions;
     $auto_judge = $row->auto_judge;
     $auto_judge_scenarios = $auto_judge == true ? unserialize($row->auto_judge_scenarios) : null;
-    $lang = $row->lang;
+
+    // take acceptable languages string and return them as an array
+    $chosen_langs= explode(" ", $row->languages);
+
     $nav[] = $works_url;
     $nav[] = array('url' => "$_SERVER[SCRIPT_NAME]?id=$id", 'name' => $title);
 
@@ -543,34 +606,64 @@ function submit_work($id, $on_behalf_of = null) {
         }
         
         // Auto-judge: Send file to hackearth
-        if ($auto_judge && $ext === $langExt[$lang]) {
+        if ($auto_judge) {
             global $hackerEarthKey;
-            $content = file_get_contents("$workPath/$filename");
-            // Run each scenario and count how many passed
+            global $language_extensions;
+
+            // get the file extension from submitted filename
+            $extension = end(explode(".", $filename));
+
+            // assume an invalid filename
+            $comment = "Not a valid language";  // grader comment
+            $grade = 0;
             $passed = 0;
-            foreach($auto_judge_scenarios as $curScenario) {
+
+            if(in_array($extension, $chosen_langs)){
+                // if it is an acceptable extension, get the source
+                $content = file_get_contents("$workPath/$filename");
+
                 //set POST variables
                 $url = 'http://api.hackerearth.com/code/run/';
-                $fields = array('client_secret' => $hackerEarthKey, 'input' => $curScenario['input'], 'source' => $content, 'lang' => $lang);
-                //url-ify the data for the POST
-                foreach($fields as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
-                rtrim($fields_string, '&');
-                //open connection
-                $ch = curl_init();
-                //set the url, number of POST vars, POST data
-                curl_setopt($ch,CURLOPT_URL, $url);
-                curl_setopt($ch,CURLOPT_POST, count($fields));
-                curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
-                curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
-                //execute post
-                $result = curl_exec($ch);
-                $result = json_decode($result, true);
-                $result['run_status']['output'] = trim($result['run_status']['output']);
-                if(trim($result['run_status']['output']) == trim($curScenario['output'])) { $passed++; } // Increment counter if passed
+                $fields = array(
+                    'client_secret' => $hackerEarthKey,
+                    'source' => urlencode($content),  /* urlencode, otherwise
+                                                       * the source code is
+                                                       * sent corrupted
+                                                       */
+                    'input' => null,
+                    'lang' => $language_extensions[$ext]
+                );
+                foreach($auto_judge_scenarios as $curScenario) {
+                    $fields['input'] = $curScenario['input'];
+
+                    //url-ify the data for the POST
+                    foreach($fields as $key=>$value) {
+                         $fields_string .= $key.'='.$value.'&';
+                     }
+                    rtrim($fields_string, '&');
+                    //open connection
+                    $ch = curl_init();
+                    //set the url, number of POST vars, POST data
+                    curl_setopt($ch,CURLOPT_URL, $url);
+                    curl_setopt($ch,CURLOPT_POST, count($fields));
+                    curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+                    curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
+                    //execute post
+                    $result = curl_exec($ch);
+                    echo $result . "<br/>";
+                    $result = json_decode($result, true);
+                    $temp = trim($result['run_status']['output']);
+                    if($temp == $curScenario['output']){
+                        $passed++;
+                    }
+
+                }
             }
             // Add the output as a comment
-            $grade = round($passed/count($auto_judge_scenarios)*10);
-            submit_grade_comments($id, $sid, $grade, 'Passed: '.$passed.'/'.count($auto_judge_scenarios), false);
+            $grade = round($passed / count($auto_judge_scenarios) * 10);
+            submit_grade_comments($id, $sid, $grade, 'Tests passed: ' .
+                                  $passed.'/'.count($auto_judge_scenarios),
+                                  false);
         }
         // End Auto-judge
     } else { // not submit_ok
@@ -618,7 +711,7 @@ function new_assignment() {
     $max_grade_error = Session::getError('max_grade');
     $tool_content .= "
         <div class='form-wrapper'>
-        <form class='form-horizontal' role='form' enctype='multipart/form-data' method='post' action='$_SERVER[SCRIPT_NAME]?course=$course_code'>
+        <form class='form-horizontal' role='form' enctype='multipart/form-data' method='post' action='$_SERVER[SCRIPT_NAME]?course=$course_code' onsubmit='return check_languages()'>
         <fieldset>
             <div class='form-group ".($title_error ? "has-error" : "")."'>
                 <label for='title' class='col-sm-2 control-label'>$m[title]:</label>
@@ -735,8 +828,8 @@ function new_assignment() {
                             </thead>
                             <tbody>
                                 <tr>
-                                  <td><input type='text' name='auto_judge_scenarios[0] [input]' /></td>
-                                  <td><input type='text' name='auto_judge_scenarios[0] [output]' /></td>
+                                  <td><input type='text' name='auto_judge_scenarios[0][input]' /></td>
+                                  <td><input type='text' name='auto_judge_scenarios[0][output]' /></td>
                                   <td><a href='#' class='autojudge_remove_scenario' style='display: none;'>X</a></td>
                                 </tr>
                                 <tr>
@@ -748,25 +841,36 @@ function new_assignment() {
                         </table>
                     </div>
                 </div>
+                <table>
                 <tr>
-                  <th>Programming Language:</th>
+                  <th>Programming Languages:</th>
                   <td>
-                    <select id='lang' name='lang'>
-                      <option value='C'>C</option>
-                      <option value='CPP'>C++</option>
-                      <option value='CPP11'>C++11</option>
-                      <option value='CLOJURE'>Clojure</option>
-                      <option value='CSHARP'>C#</option>
-                      <option value='JAVA'>Java</option>
-                      <option value='JAVASCRIPT'>Javascript</option>
-                      <option value='HASKELL'>Haskell</option>
-                      <option value='PERL'>Perl</option>
-                      <option value='PHP'>PHP</option>
-                      <option value='PYTHON'>Python</option>
-                      <option value='RUBY'>Ruby</option>
-                    </select>
+                    <input type='checkbox' name='c' value='C' class='langs'>C<br />
+                    <input type='checkbox' name='cpp' value='CPP' class='langs'>C++
+                    <br/>
+                    <input type='checkbox' name='cpp11' value='CPP11' class='langs'>
+                    C++11<br />
+                    <input type='checkbox' name='clj' value='CLOJURE' class='langs'>
+                    Clojure<br />
+                    <input type='checkbox' name='cs' value='CSHARP' class='langs'>C#
+                    <br/>
+                    <input type='checkbox' name='java' value='JAVA' class='langs'>Java
+                    <br />
+                    <input type='checkbox' name='js' value='JAVASCRIPT' class='langs'>
+                    JavaScript<br />
+                    <input type='checkbox' name='hs' value='HASKELL' class='langs'>
+                    Haskell<br />
+                    <input type='checkbox' name='pl' value='PERL' class='langs'>Perl
+                    <br />
+                    <input type='checkbox' name='php' value='PHP' class='langs'>PHP
+                    <br />
+                    <input type='checkbox' name='py' value='PYTHON' class='langs'>
+                    Python <br />
+                    <input type='checkbox' name='rb' value='RUBY' class='langs'>Ruby
+                    <br />
                   </td>
                 </tr>
+                </table>
                 <table id='assignees_tbl' class='table hide'>
                     <tr class='title1'>
                       <td id='assignees'>$langStudents</td>
