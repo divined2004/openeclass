@@ -469,6 +469,20 @@ function submit_work($id, $on_behalf_of = null) {
     $langUploadSuccess, $langBack, $langUploadError,
     $langExerciseNotPermit, $langUnwantedFiletype, $course_code,
     $langOnBehalfOfUserComment, $langOnBehalfOfGroupComment, $course_id;
+    $langExt = array(
+        'C' => 'c',
+        'CPP' => 'cpp',
+        'CPP11' => 'cpp11',
+        'CLOJURE' => 'clojure',
+        'CSHARP' => 'c#',
+        'JAVA' => 'java',
+        'JAVASCRIPT' => 'js',
+        'HASKELL' => 'haskell',
+        'PERL' => 'pl',
+        'PHP' => 'php',
+        'PYTHON' => 'py',
+        'RUBY' => 'ruby',
+    );
 
     if (isset($on_behalf_of)) {
         $user_id = $on_behalf_of;
@@ -608,6 +622,7 @@ function submit_work($id, $on_behalf_of = null) {
         // Auto-judge: Send file to hackearth
         if ($auto_judge) {
             global $hackerEarthKey;
+            if(!isset($hackerEarthKey)) { echo 'Hacker Earth Key is not specified in config.php!'; die(); }
             global $language_extensions;
 
             // get the file extension from submitted filename
