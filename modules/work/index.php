@@ -639,16 +639,17 @@ function submit_work($id, $on_behalf_of = null) {
 
                 //set POST variables
                 $url = 'http://api.hackerearth.com/code/run/';
-                $fields = array(
-                    'client_secret' => $hackerEarthKey,
-                    'source' => urlencode($content),  /* urlencode, otherwise
+                foreach($auto_judge_scenarios as $curScenario) {
+                     $fields = array(
+                      'client_secret' => $hackerEarthKey,
+                      'source' => urlencode($content),  /* urlencode, otherwise
                                                        * the source code is
                                                        * sent corrupted
                                                        */
-                    'input' => null,
-                    'lang' => $language_extensions[$ext]
-                );
-                foreach($auto_judge_scenarios as $curScenario) {
+                      'input' => $curScenario['input'],
+                      'lang' => $language_extensions[$ext]
+                     );
+
                     $fields['input'] = $curScenario['input'];
 
                     //url-ify the data for the POST
@@ -838,6 +839,7 @@ function new_assignment() {
                                 <tr>
                                   <th>Input</th>
                                   <th>Expected Output</th>
+				  <th>Weight</th>
                                   <th>Delete</th>
                                 </tr>
                             </thead>
@@ -845,6 +847,7 @@ function new_assignment() {
                                 <tr>
                                   <td><input type='text' name='auto_judge_scenarios[0][input]' /></td>
                                   <td><input type='text' name='auto_judge_scenarios[0][output]' /></td>
+				  <td><input type='text' name='auto_judge_scenarios[0][weight]' /></td>
                                   <td><a href='#' class='autojudge_remove_scenario' style='display: none;'>X</a></td>
                                 </tr>
                                 <tr>
