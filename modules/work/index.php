@@ -129,6 +129,21 @@ if ($is_editor) {
         }
     }
 
+    function check_weights(){
+        /* function to check whether the weights input fields are numbers */
+        var weights = document.getElementsByClassName('auto_judge_weight');
+        for (i = 0; i < weights.length; i++) {
+            if(parseFloat(weights[i].value)) {
+                continue;
+            }
+            else {
+                alert('Only numbers as weights!');
+                return false;
+            }
+        }
+        return true;
+    }
+
     $(function() {        
         $('input[name=group_submissions]').click(changeAssignLabel);
         $('input[id=assign_button_some]').click(ajaxAssignees);        
@@ -618,7 +633,7 @@ function submit_work($id, $on_behalf_of = null) {
         } else {
             $tool_content .= "<div class='alert alert-danger'>$langUploadError<br><a href='$_SERVER[SCRIPT_NAME]?course=$course_code'>$langBack</a></div><br>";
         }
-        
+
         // Auto-judge: Send file to hackearth
         if ($auto_judge) {
             global $hackerEarthKey;
@@ -649,6 +664,7 @@ function submit_work($id, $on_behalf_of = null) {
 
                 //set POST variables
                 $url = 'http://api.hackerearth.com/code/run/';
+                $weight_sum = 0;
                 foreach($auto_judge_scenarios as $curScenario) {
                     $fields['input'] = $curScenario['input'];
 
@@ -672,12 +688,16 @@ function submit_work($id, $on_behalf_of = null) {
                     $temp = trim($result['run_status']['output']);
                     if($temp == $curScenario['output']){
                         $passed++;
+                        $grade += $curScenario['weight'];
                     }
+
+                    $weight_sum += $curScenario['weight'];
 
                 }
             }
             // Add the output as a comment
-            $grade = round($passed / count($auto_judge_scenarios) * 10);
+            //$grade = round($passed / count($auto_judge_scenarios) * 10);
+            $grade = round($grade / $weight_sum * 10, 2);
             submit_grade_comments($id, $sid, $grade, 'Tests passed: ' .
                                   $passed.'/'.count($auto_judge_scenarios),
                                   false);
@@ -728,7 +748,7 @@ function new_assignment() {
     $max_grade_error = Session::getError('max_grade');
     $tool_content .= "
         <div class='form-wrapper'>
-        <form class='form-horizontal' role='form' enctype='multipart/form-data' method='post' action='$_SERVER[SCRIPT_NAME]?course=$course_code' onsubmit='return check_languages()'>
+        <form class='form-horizontal' role='form' enctype='multipart/form-data' method='post' action='$_SERVER[SCRIPT_NAME]?course=$course_code' onsubmit='return (check_languages() && check_weights())'>
         <fieldset>
             <div class='form-group ".($title_error ? "has-error" : "")."'>
                 <label for='title' class='col-sm-2 control-label'>$m[title]:</label>
@@ -848,7 +868,7 @@ function new_assignment() {
                                 <tr>
                                   <td><input type='text' name='auto_judge_scenarios[0][input]' /></td>
                                   <td><input type='text' name='auto_judge_scenarios[0][output]' /></td>
-				                  <td><input type='text' name='auto_judge_scenarios[0][weight]' /></td>
+				                  <td><input type='text' name='auto_judge_scenarios[0][weight]' maxlength='4' size='4' class='auto_judge_weight'/></td>
                                   <td><a href='#' class='autojudge_remove_scenario' style='display: none;'>X</a></td>
                                 </tr>
                                 <tr>
@@ -2104,7 +2124,7 @@ function submit_grade_comments($id, $sid, $grade, $comment, $email) {
     (isset($grade) && $grade_valid!== false) ? $grade = $grade_valid : $grade = NULL;
         
     if (Database::get()->query("UPDATE assignment_submit 
-                                SET grade = ?d, grade_comments = ?s,
+                                SET grade = ?f, grade_comments = ?s,
                                 grade_submission_date = NOW(), grade_submission_ip = ?s
                                 WHERE id = ?d", $grade, $comment, $_SERVER['REMOTE_ADDR'], $sid)->affectedRows>0) {
         $title = Database::get()->querySingle("SELECT title FROM assignment WHERE id = ?d", $id)->title;
