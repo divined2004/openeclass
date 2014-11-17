@@ -636,23 +636,24 @@ function submit_work($id, $on_behalf_of = null) {
             if(in_array($extension, $chosen_langs)){
                 // if it is an acceptable extension, get the source
                 $content = file_get_contents("$workPath/$filename");
-
-                //set POST variables
-                $url = 'http://api.hackerearth.com/code/run/';
-                foreach($auto_judge_scenarios as $curScenario) {
-                     $fields = array(
+                $fields = array(
                       'client_secret' => $hackerEarthKey,
                       'source' => urlencode($content),  /* urlencode, otherwise
                                                        * the source code is
                                                        * sent corrupted
                                                        */
-                      'input' => $curScenario['input'],
+                      'input' => null,
                       'lang' => $language_extensions[$ext]
                      );
 
-                    //$fields['input'] = $curScenario['input'];
+
+                //set POST variables
+                $url = 'http://api.hackerearth.com/code/run/';
+                foreach($auto_judge_scenarios as $curScenario) {
+                    $fields['input'] = $curScenario['input'];
 
                     //url-ify the data for the POST
+                    $fields_string = "";
                     foreach($fields as $key=>$value) {
                          $fields_string .= $key.'='.$value.'&';
                      }
@@ -666,7 +667,7 @@ function submit_work($id, $on_behalf_of = null) {
                     curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
                     //execute post
                     $result = curl_exec($ch);
-                    echo $result . "<br/>";
+                    //echo $result . "<br/>";
                     $result = json_decode($result, true);
                     $temp = trim($result['run_status']['output']);
                     if($temp == $curScenario['output']){
@@ -847,7 +848,7 @@ function new_assignment() {
                                 <tr>
                                   <td><input type='text' name='auto_judge_scenarios[0][input]' /></td>
                                   <td><input type='text' name='auto_judge_scenarios[0][output]' /></td>
-				  <td><input type='text' name='auto_judge_scenarios[0][weight]' /></td>
+				                  <td><input type='text' name='auto_judge_scenarios[0][weight]' /></td>
                                   <td><a href='#' class='autojudge_remove_scenario' style='display: none;'>X</a></td>
                                 </tr>
                                 <tr>
