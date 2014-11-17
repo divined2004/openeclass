@@ -650,7 +650,7 @@ function submit_work($id, $on_behalf_of = null) {
                       'lang' => $language_extensions[$ext]
                      );
 
-                    $fields['input'] = $curScenario['input'];
+                    //$fields['input'] = $curScenario['input'];
 
                     //url-ify the data for the POST
                     foreach($fields as $key=>$value) {
